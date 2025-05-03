@@ -67,15 +67,10 @@
       border: 1px dashed #bbb;
       border-radius: 8px;
       padding: 1rem;
-      word-break: break-all;
+      word-break: break-word;
       white-space: pre-wrap;
       font-family: monospace;
       font-size: 0.85rem;
-    }
-
-    input[type="file"] {
-      padding: 0.5rem;
-      font-size: 1rem;
     }
 
     .label {
@@ -95,6 +90,30 @@
       margin-top: 1rem;
     }
 
+    .upload-box {
+      border: 2px dashed #aaa;
+      padding: 2rem;
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #fafafa;
+      transition: background 0.2s ease;
+    }
+
+    .upload-box:hover {
+      background-color: #f0f0f0;
+    }
+
+    .upload-box p {
+      margin: 0;
+      font-size: 1rem;
+      color: #333;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
     button {
       background: #0066ff;
       color: white;
@@ -108,6 +127,10 @@
     button:hover {
       background: #0050cc;
     }
+
+    .spacer {
+      margin-top: 1.5rem;
+    }
   </style>
 </head>
 <body>
@@ -118,10 +141,16 @@
   <!-- Left Column -->
   <div class="column">
     <div class="card">
-      <label class="label">Upload SVG File</label>
+      <!-- Custom File Upload UI -->
+      <label for="fileInput">
+        <div class="upload-box">
+          <p>📁 Click to upload SVG file<br>or drag and drop</p>
+        </div>
+      </label>
       <input type="file" id="fileInput" accept=".svg">
 
-      <label class="label" style="margin-top: 1rem;">Or Paste SVG Code</label>
+      <!-- Paste SVG Text -->
+      <label class="label spacer">Or Paste SVG Code</label>
       <textarea id="svgTextarea" placeholder="<svg>...</svg>"></textarea>
 
       <button onclick="convertSVG()">Convert</button>
@@ -134,8 +163,11 @@
       <label class="label">Base64 Output:</label>
       <div class="output" id="base64Output">Base64 result will appear here...</div>
 
-      <label class="label" style="margin-top: 1rem;">CSS Background Snippet:</label>
+      <label class="label spacer">CSS Background Snippet:</label>
       <div class="output" id="cssOutput">background-image: url(...);</div>
+
+      <label class="label spacer">Simple CSS SVG (Inline):</label>
+      <div class="output" id="simpleOutput">background-image: url(...);</div>
 
       <div class="preview-box" id="previewBox"></div>
     </div>
@@ -147,6 +179,7 @@
   const svgTextarea = document.getElementById('svgTextarea');
   const base64Output = document.getElementById('base64Output');
   const cssOutput = document.getElementById('cssOutput');
+  const simpleOutput = document.getElementById('simpleOutput');
   const previewBox = document.getElementById('previewBox');
 
   fileInput.addEventListener('change', function () {
@@ -171,20 +204,22 @@
       return;
     }
 
-    // Minify (remove line breaks & quotes)
+    // Minify SVG
     let minified = svg
       .replace(/\n/g, '')
       .replace(/"/g, "'")
       .replace(/\s{2,}/g, ' ')
       .trim();
 
+    // Base64 encode
     let base64 = `data:image/svg+xml;utf8,${encodeURIComponent(minified)}`;
 
+    // Outputs
     base64Output.textContent = base64;
+    cssOutput.textContent = `background-image: url("${base64}");`;
+    simpleOutput.textContent = `background-image: url("data:image/svg+xml;utf8,${minified}");`;
 
-    let cssSnippet = `background-image: url("${base64}");`;
-    cssOutput.textContent = cssSnippet;
-
+    // Preview
     previewBox.style.backgroundImage = `url("${base64}")`;
   }
 </script>
