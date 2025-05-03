@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG to Base64 Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #1a73e8;
+            margin-bottom: 2rem;
+            text-align: center;
+            width: 100;
+        }
+
+        .upload-container {
+            border: 2px dashed #1a73e8;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .upload-container:hover {
+            background: #f8f9fa;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: monospace;
+            margin-bottom: 1rem;
+        }
+
+        .output-section {
+            margin-top: 2rem;
+        }
+
+        .output-title {
+            color: #1a73e8;
+            margin-bottom: 1rem;
+        }
+
+        .output-code {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 5px 10px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #1557b0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .column {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>SVG to Base64 Converter</h1>
+    
+    <div class="container">
+        <!-- Left Column -->
+        <div class="column">
+            <div class="upload-container" onclick="document.getElementById('file-input').click()">
+                <p>📁 Click to upload SVG file<br>or drag and drop</p>
+                <input type="file" id="file-input" accept=".svg">
+            </div>
+            <textarea id="svg-code" placeholder="Or paste your SVG code here..."></textarea>
+        </div>
+
+        <!-- Right Column -->
+        <div class="column">
+            <div class="output-section">
+                <h3 class="output-title">Base64 String:</h3>
+                <div class="output-code">
+                    <button class="copy-btn" onclick="copyCode('base64-output')">Copy</button>
+                    <div id="base64-output"></div>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h3 class="output-title">CSS Background:</h3>
+                <div class="output-code">
+                    <button class="copy-btn" onclick="copyCode('css-output')">Copy</button>
+                    <div id="css-output"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const svgCode = document.getElementById('svg-code');
+
+        // Handle file upload
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type === 'image/svg+xml') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    svgCode.value = e.target.result;
+                    convertSVG();
+                }
+                reader.readAsText(file);
+            }
+        });
+
+        // Handle text input
+        svgCode.addEventListener('input', convertSVG);
+
+        function convertSVG() {
+            const svg = svgCode.value;
+            if (!svg) return;
+
+            try {
+                const blob = new Blob([svg], {type: 'image/svg+xml'});
+                const reader = new FileReader();
+                reader.onload = function() {
+                    const base64 = reader.result;
+                    document.getElementById('base64-output').textContent = base64;
+                    document.getElementById('css-output').textContent = 
+                        `background: url(${base64}) center/contain no-repeat;`;
+                }
+                reader.readAsDataURL(blob);
+            } catch (error) {
+                console.error('Conversion error:', error);
+            }
+        }
+
+        function copyCode(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text)
+                .then(() => alert('Copied to clipboard!'))
+                .catch(err => console.error('Copy failed:', err));
+        }
+
+        // Drag and drop handling
+        document.addEventListener('dragover', e => e.preventDefault());
+        document.addEventListener('drop', e => {
+            e.preventDefault();
+            if (e.dataTransfer.files[0]) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+    </script>
+</body>
+</html>
